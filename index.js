@@ -5,7 +5,7 @@ const app = express();
 const port = process.env.PORT || 5000;
 
 // middleware
-app.use(cors({ origin: 'http://localhost:5173' }));
+app.use(cors());
 app.use(express.json());
 
 
@@ -30,14 +30,23 @@ async function run() {
     const teachersCollection = db.collection('teachers')
     const classesCollection = db.collection('classes')
 
+    // post teacher request by teacher
     app.post('/teacher-requests', async(req, res)=>{
         const teacherInfo = req.body;
         const result = await teachersCollection.insertOne(teacherInfo);
         res.send(result);
     })
+    // post class request by teacher
     app.post('/classes', async(req, res)=>{
         const classInfo = req.body;
         const result = await classesCollection.insertOne(classInfo);
+        res.send(result);
+    })
+    // get all class requests added by a specific teacher
+    app.get('/classes/:email', async(req, res)=>{
+        const email = req.params.email;
+        const query = {email}
+        const result = await classesCollection.find(query).toArray();
         res.send(result);
     })
 
