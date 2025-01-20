@@ -28,10 +28,16 @@ async function run() {
 
     const db = client.db('skillHorizonDB')
     const teachersCollection = db.collection('teachers')
+    const classesCollection = db.collection('classes')
 
     app.post('/teacher-requests', async(req, res)=>{
         const teacherInfo = req.body;
         const result = await teachersCollection.insertOne(teacherInfo);
+        res.send(result);
+    })
+    app.post('/classes', async(req, res)=>{
+        const classInfo = req.body;
+        const result = await classesCollection.insertOne(classInfo);
         res.send(result);
     })
 
