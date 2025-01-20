@@ -49,6 +49,11 @@ async function run() {
         const result = await classesCollection.find(query).toArray();
         res.send(result);
     })
+    // get all class requests added all teachers
+    app.get('/classes', async(req, res)=>{
+        const result = await classesCollection.find().toArray();
+        res.send(result);
+    })
 
 
 
