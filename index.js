@@ -50,7 +50,7 @@ async function run() {
         const query = {email: user.email}
         const existingUser = await usersCollection.findOne(query);
         if(existingUser){
-          return req.send({message: 'User already exists!', insertedId : null})
+          return res.send({message: 'User already exists!', insertedId : null})
         }
         const result = await usersCollection.insertOne(user);
         res.send(result);
@@ -62,7 +62,7 @@ async function run() {
         const result = await classesCollection.find(query).toArray();
         res.send(result);
     })
-    // (Admin) GET all teachers requests from users
+    // (Admin) GET all teacher requests from users
     app.get('/teachers', async(req, res)=>{
         const result = await teachersCollection.find().toArray();
         res.send(result);
@@ -70,6 +70,11 @@ async function run() {
     // (Admin) GET all class requests from teachers
     app.get('/classes', async(req, res)=>{
         const result = await classesCollection.find().toArray();
+        res.send(result);
+    })
+    // (Admin) GET all users info
+    app.get('/users', async(req, res)=>{
+        const result = await usersCollection.find().toArray();
         res.send(result);
     })
 
