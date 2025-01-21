@@ -32,64 +32,97 @@ async function run() {
     const usersCollection = db.collection('users')
 
     // POST teacher request by user
-    app.post('/teacher-requests', async(req, res)=>{
-        const teacherInfo = req.body;
-        const result = await teachersCollection.insertOne(teacherInfo);
-        res.send(result);
+    app.post('/teacher-requests', async (req, res) => {
+      const teacherInfo = req.body;
+      const result = await teachersCollection.insertOne(teacherInfo);
+      res.send(result);
     })
     // (Teacher) POST class request by teacher
-    app.post('/classes', async(req, res)=>{
-        const classInfo = req.body;
-        const result = await classesCollection.insertOne(classInfo);
-        res.send(result);
+    app.post('/classes', async (req, res) => {
+      const classInfo = req.body;
+      const result = await classesCollection.insertOne(classInfo);
+      res.send(result);
     })
     // POST users data in db
-    app.post('/users', async(req, res)=>{
-        const user = req.body;
-        // insert email if user doesn't exist
-        const query = {email: user.email}
-        const existingUser = await usersCollection.findOne(query);
-        if(existingUser){
-          return res.send({message: 'User already exists!', insertedId : null})
-        }
-        const result = await usersCollection.insertOne(user);
-        res.send(result);
+    app.post('/users', async (req, res) => {
+      const user = req.body;
+      // insert email if user doesn't exist
+      const query = { email: user.email }
+      const existingUser = await usersCollection.findOne(query);
+      if (existingUser) {
+        return res.send({ message: 'User already exists!', insertedId: null })
+      }
+      const result = await usersCollection.insertOne(user);
+      res.send(result);
     })
     // (Teacher) GET all class requests added by a specific teacher
-    app.get('/classes/:email', async(req, res)=>{
-        const email = req.params.email;
-        const query = {email}
-        const result = await classesCollection.find(query).toArray();
-        res.send(result);
+    app.get('/classes/:email', async (req, res) => {
+      const email = req.params.email;
+      const query = { email }
+      const result = await classesCollection.find(query).toArray();
+      res.send(result);
     })
     // (Admin) GET all teacher requests from users
-    app.get('/teachers', async(req, res)=>{
-        const result = await teachersCollection.find().toArray();
-        res.send(result);
+    app.get('/teachers', async (req, res) => {
+      const result = await teachersCollection.find().toArray();
+      res.send(result);
     })
     // (Admin) GET all class requests from teachers
-    app.get('/classes', async(req, res)=>{
-        const result = await classesCollection.find().toArray();
-        res.send(result);
+    app.get('/classes', async (req, res) => {
+      const result = await classesCollection.find().toArray();
+      res.send(result);
     })
     // (Admin) GET all users info
-    app.get('/users', async(req, res)=>{
-        const result = await usersCollection.find().toArray();
-        res.send(result);
+    app.get('/users', async (req, res) => {
+      const result = await usersCollection.find().toArray();
+      res.send(result);
     })
 
     // (Admin) PATCH make a user admin
-    app.patch('/users/admin/:id', async(req,res)=>{
+    app.patch('/users/admin/:id', async (req, res) => {
       const id = req.params.id;
-      const filter = {_id : new ObjectId(id)}
+      const filter = { _id: new ObjectId(id) }
       const updatedDoc = {
-        $set:{
+        $set: {
           role: "Admin"
         }
       }
-      const result = await usersCollection.updateOne(filter,updatedDoc)
+      const result = await usersCollection.updateOne(filter, updatedDoc)
       res.send(result)
     })
+
+    // (Admin) PATCH approve a teacher
+    app.patch('/users/teacher-approve/:email', async (req, res) => {
+      const email = req.params.email;
+      if (!email) {
+        return res.status(400).send({ error: "Email is required" });
+      }
+      const filter = { email: email };
+      const updatedDoc1 = {
+        $set: {
+          status: "Accepted",
+        },
+      };
+      const updatedDoc2 = {
+        $set: {
+          role: "Teacher",
+        },
+      };
+      try {
+        const result1 = await teachersCollection.updateOne(filter, updatedDoc1);
+        const result2 = await usersCollection.updateOne(filter, updatedDoc2);
+        if (result2.matchedCount === 0) {
+          return res.status(404).send({ error: "User not found" });
+        }
+        res.send({result1, result2});
+      } catch (error) {
+        console.error(error);
+        res.status(500).send({ error: "Failed to update user role" });
+      }
+    });
+
+
+
 
 
 
@@ -105,9 +138,9 @@ run().catch(console.dir);
 
 
 app.get('/', (req, res) => {
-    res.send('SkillHorizon is going to blast! Are you ready?')
+  res.send('SkillHorizon is going to blast! Are you ready?')
 })
 
 app.listen(port, () => {
-    console.log(`SkillHorizon server is running on port: ${port}`);
+  console.log(`SkillHorizon server is running on port: ${port}`);
 })
