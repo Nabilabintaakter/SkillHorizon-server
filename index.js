@@ -29,32 +29,45 @@ async function run() {
     const db = client.db('skillHorizonDB')
     const teachersCollection = db.collection('teachers')
     const classesCollection = db.collection('classes')
+    const usersCollection = db.collection('users')
 
-    // post teacher request by user
+    // POST teacher request by user
     app.post('/teacher-requests', async(req, res)=>{
         const teacherInfo = req.body;
         const result = await teachersCollection.insertOne(teacherInfo);
         res.send(result);
     })
-    // (Teacher) post class request by teacher
+    // (Teacher) POST class request by teacher
     app.post('/classes', async(req, res)=>{
         const classInfo = req.body;
         const result = await classesCollection.insertOne(classInfo);
         res.send(result);
     })
-    // (Teacher) get all class requests added by a specific teacher
+    // POST users data in db
+    app.post('/users', async(req, res)=>{
+        const user = req.body;
+        // insert email if user doesn't exist
+        const query = {email: user.email}
+        const existingUser = await usersCollection.findOne(query);
+        if(existingUser){
+          return req.send({message: 'User already exists!', insertedId : null})
+        }
+        const result = await usersCollection.insertOne(user);
+        res.send(result);
+    })
+    // (Teacher) GET all class requests added by a specific teacher
     app.get('/classes/:email', async(req, res)=>{
         const email = req.params.email;
         const query = {email}
         const result = await classesCollection.find(query).toArray();
         res.send(result);
     })
-    // (Admin) get all teachers requests from users
+    // (Admin) GET all teachers requests from users
     app.get('/teachers', async(req, res)=>{
         const result = await teachersCollection.find().toArray();
         res.send(result);
     })
-    // (Admin) get all class requests from teachers
+    // (Admin) GET all class requests from teachers
     app.get('/classes', async(req, res)=>{
         const result = await classesCollection.find().toArray();
         res.send(result);
