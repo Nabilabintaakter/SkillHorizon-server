@@ -72,6 +72,14 @@ async function run() {
       const result = await classesCollection.find().toArray();
       res.send(result);
     })
+    //  GET all class approved by admin
+    app.get('/all-classes', async (req, res) => {
+      const query = {status : 'Accepted'}
+      const result = await classesCollection.find(query).toArray();
+      res.send(result);
+    })
+
+
     // (Admin) GET all users info
     app.get('/users', async (req, res) => {
       const result = await usersCollection.find().toArray();
