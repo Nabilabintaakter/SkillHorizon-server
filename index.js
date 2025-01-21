@@ -30,26 +30,31 @@ async function run() {
     const teachersCollection = db.collection('teachers')
     const classesCollection = db.collection('classes')
 
-    // post teacher request by teacher
+    // post teacher request by user
     app.post('/teacher-requests', async(req, res)=>{
         const teacherInfo = req.body;
         const result = await teachersCollection.insertOne(teacherInfo);
         res.send(result);
     })
-    // post class request by teacher
+    // (Teacher) post class request by teacher
     app.post('/classes', async(req, res)=>{
         const classInfo = req.body;
         const result = await classesCollection.insertOne(classInfo);
         res.send(result);
     })
-    // get all class requests added by a specific teacher
+    // (Teacher) get all class requests added by a specific teacher
     app.get('/classes/:email', async(req, res)=>{
         const email = req.params.email;
         const query = {email}
         const result = await classesCollection.find(query).toArray();
         res.send(result);
     })
-    // get all class requests added all teachers
+    // (Admin) get all teachers requests from users
+    app.get('/teachers', async(req, res)=>{
+        const result = await teachersCollection.find().toArray();
+        res.send(result);
+    })
+    // (Admin) get all class requests from teachers
     app.get('/classes', async(req, res)=>{
         const result = await classesCollection.find().toArray();
         res.send(result);
