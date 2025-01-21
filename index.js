@@ -77,6 +77,13 @@ async function run() {
       const result = await usersCollection.find().toArray();
       res.send(result);
     })
+    // GET a user his/her info by email
+    app.get('/users/:email', async (req, res) => {
+      const email = req.params.email;
+      const query = { email }
+      const result = await usersCollection.find(query).toArray();
+      res.send(result);
+    })
 
     // (Admin) PATCH make a user admin
     app.patch('/users/admin/:id', async (req, res) => {
@@ -114,7 +121,7 @@ async function run() {
         if (result2.matchedCount === 0) {
           return res.status(404).send({ error: "User not found" });
         }
-        res.send({result1, result2});
+        res.send({ result1, result2 });
       } catch (error) {
         console.error(error);
         res.status(500).send({ error: "Failed to update user role" });
@@ -143,14 +150,53 @@ async function run() {
         if (result2.matchedCount === 0) {
           return res.status(404).send({ error: "User not found" });
         }
-        res.send({result1, result2});
+        res.send({ result1, result2 });
       } catch (error) {
         console.error(error);
         res.status(500).send({ error: "Failed to update user role" });
       }
     });
 
-
+    // (Admin) PATCH approve a class
+    app.patch('/admin/approve-class/:id', async (req, res) => {
+      const id = req.params.id;
+      if (!id) {
+        return res.status(400).send({ error: "Something went wrong." });
+      }
+      const filter = { _id: new ObjectId(id) };
+      const updatedDoc = {
+        $set: {
+          status: "Accepted",
+        },
+      };
+      try {
+        const result = await classesCollection.updateOne(filter, updatedDoc);
+        res.send(result);
+      } catch (error) {
+        console.error(error);
+        res.status(500).send({ error: "Failed to update class status" });
+      }
+    });
+    // (Admin) PATCH reject a class
+    app.patch('/admin/reject-class/:id', async (req, res) => {
+      const id = req.params.id;
+      if (!id) {
+        return res.status(400).send({ error: "Something went wrong." });
+      }
+      const filter = { _id: new ObjectId(id) };
+      const updatedDoc = {
+        $set: {
+          status: "Rejected",
+        },
+      };
+      try {
+        const result = await classesCollection.updateOne(filter, updatedDoc);
+        res.send(result);
+      } catch (error) {
+        console.error(error);
+        res.status(500).send({ error: "Failed to update class status" });
+      }
+    });
 
 
 
