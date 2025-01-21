@@ -120,7 +120,35 @@ async function run() {
         res.status(500).send({ error: "Failed to update user role" });
       }
     });
-
+    // (Admin) PATCH approve a teacher
+    app.patch('/users/teacher-reject/:email', async (req, res) => {
+      const email = req.params.email;
+      if (!email) {
+        return res.status(400).send({ error: "Email is required" });
+      }
+      const filter = { email: email };
+      const updatedDoc1 = {
+        $set: {
+          status: "Rejected",
+        },
+      };
+      const updatedDoc2 = {
+        $set: {
+          role: "Student",
+        },
+      };
+      try {
+        const result1 = await teachersCollection.updateOne(filter, updatedDoc1);
+        const result2 = await usersCollection.updateOne(filter, updatedDoc2);
+        if (result2.matchedCount === 0) {
+          return res.status(404).send({ error: "User not found" });
+        }
+        res.send({result1, result2});
+      } catch (error) {
+        console.error(error);
+        res.status(500).send({ error: "Failed to update user role" });
+      }
+    });
 
 
 
