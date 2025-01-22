@@ -1,12 +1,28 @@
 require("dotenv").config();
 const express = require('express');
 const cors = require('cors');
+const jwt = require('jsonwebtoken');
 const app = express();
 const port = process.env.PORT || 5000;
 
 // middleware
 app.use(cors());
 app.use(express.json());
+
+const verifyToken = (req, res, next) => {
+  // console.log('inside verify token', req.headers.authorization);
+  if (!req.headers.authorization) {
+    return res.status(401).send({ message: 'unauthorized access' });
+  }
+  const token = req.headers.authorization.split(' ')[1];
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+    if (err) {
+      return res.status(401).send({ message: 'unauthorized access' })
+    }
+    req.decoded = decoded;
+    next();
+  })
+}
 
 
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
@@ -31,14 +47,21 @@ async function run() {
     const classesCollection = db.collection('classes')
     const usersCollection = db.collection('users')
 
+    // jwt related api
+    app.post('/jwt', async (req, res) => {
+      const user = req.body;
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
+      res.send({ token })
+    })
+
     // POST teacher request by user
-    app.post('/teacher-requests', async (req, res) => {
+    app.post('/teacher-requests',verifyToken,async (req, res) => {
       const teacherInfo = req.body;
       const result = await teachersCollection.insertOne(teacherInfo);
       res.send(result);
     })
     // (Teacher) POST class request by teacher
-    app.post('/classes', async (req, res) => {
+    app.post('/classes',verifyToken, async (req, res) => {
       const classInfo = req.body;
       const result = await classesCollection.insertOne(classInfo);
       res.send(result);
@@ -56,43 +79,43 @@ async function run() {
       res.send(result);
     })
     // (Teacher) GET all class requests added by a specific teacher
-    app.get('/classes/:email', async (req, res) => {
+    app.get('/classes/:email',verifyToken, async (req, res) => {
       const email = req.params.email;
       const query = { email }
       const result = await classesCollection.find(query).toArray();
       res.send(result);
     })
     // (Admin) GET all teacher requests from users
-    app.get('/teachers', async (req, res) => {
+    app.get('/teachers',verifyToken, async (req, res) => {
       const result = await teachersCollection.find().toArray();
       res.send(result);
     })
     // (Admin) GET all class requests from teachers
-    app.get('/classes', async (req, res) => {
+    app.get('/classes',verifyToken, async (req, res) => {
       const result = await classesCollection.find().toArray();
       res.send(result);
     })
     //  GET all class approved by admin
     app.get('/all-classes', async (req, res) => {
-      const query = {status : 'Accepted'}
+      const query = { status: 'Accepted' }
       const result = await classesCollection.find(query).toArray();
       res.send(result);
     })
     //  GET a class details by id
-    app.get('/class/:id', async (req, res) => {
+    app.get('/class/:id',verifyToken, async (req, res) => {
       const id = req.params.id;
-      const query = {_id: new ObjectId(id)};
+      const query = { _id: new ObjectId(id) };
       const result = await classesCollection.findOne(query);
       res.send(result);
     })
 
     // (Admin) GET all users info
-    app.get('/users', async (req, res) => {
+    app.get('/users',verifyToken, async (req, res) => {
       const result = await usersCollection.find().toArray();
       res.send(result);
     })
     // GET a user his/her info by email
-    app.get('/users/:email', async (req, res) => {
+    app.get('/users/:email',verifyToken, async (req, res) => {
       const email = req.params.email;
       const query = { email }
       const result = await usersCollection.find(query).toArray();
@@ -100,7 +123,7 @@ async function run() {
     })
 
     // (Admin) PATCH make a user admin
-    app.patch('/users/admin/:id', async (req, res) => {
+    app.patch('/users/admin/:id',verifyToken, async (req, res) => {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) }
       const updatedDoc = {
@@ -113,7 +136,7 @@ async function run() {
     })
 
     // (Admin) PATCH approve a teacher
-    app.patch('/users/teacher-approve/:email', async (req, res) => {
+    app.patch('/users/teacher-approve/:email',verifyToken, async (req, res) => {
       const email = req.params.email;
       if (!email) {
         return res.status(400).send({ error: "Email is required" });
@@ -141,8 +164,8 @@ async function run() {
         res.status(500).send({ error: "Failed to update user role" });
       }
     });
-    // (Admin) PATCH approve a teacher
-    app.patch('/users/teacher-reject/:email', async (req, res) => {
+    // (Admin) PATCH reject a teacher
+    app.patch('/users/teacher-reject/:email',verifyToken, async (req, res) => {
       const email = req.params.email;
       if (!email) {
         return res.status(400).send({ error: "Email is required" });
@@ -172,7 +195,7 @@ async function run() {
     });
 
     // (Admin) PATCH approve a class
-    app.patch('/admin/approve-class/:id', async (req, res) => {
+    app.patch('/admin/approve-class/:id',verifyToken, async (req, res) => {
       const id = req.params.id;
       if (!id) {
         return res.status(400).send({ error: "Something went wrong." });
@@ -192,7 +215,7 @@ async function run() {
       }
     });
     // (Admin) PATCH reject a class
-    app.patch('/admin/reject-class/:id', async (req, res) => {
+    app.patch('/admin/reject-class/:id',verifyToken, async (req, res) => {
       const id = req.params.id;
       if (!id) {
         return res.status(400).send({ error: "Something went wrong." });
