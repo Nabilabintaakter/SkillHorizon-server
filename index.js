@@ -78,7 +78,13 @@ async function run() {
       const result = await classesCollection.find(query).toArray();
       res.send(result);
     })
-
+    //  GET a class details by id
+    app.get('/class/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = {_id: new ObjectId(id)};
+      const result = await classesCollection.findOne(query);
+      res.send(result);
+    })
 
     // (Admin) GET all users info
     app.get('/users', async (req, res) => {
