@@ -92,8 +92,12 @@ async function run() {
       const result = await usersCollection.insertOne(user);
       res.send(result);
     })
-
-    
+    // get user role (for all users either logged in or not)
+    app.get('/users/role/:email', async (req, res) => {
+      const email = req.params.email
+      const result = await usersCollection.findOne({ email })
+      res.send({ role: result?.role })
+    })
 
     // (Admin) GET all users info
     app.get('/users', verifyToken, verifyAdmin, async (req, res) => {
