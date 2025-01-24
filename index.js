@@ -78,7 +78,7 @@ async function run() {
     }
 
 
-                    // **************USERS related api****************
+    // **************USERS related api****************
 
     // POST users data in db
     app.post('/users', async (req, res) => {
@@ -105,7 +105,7 @@ async function run() {
       res.send(result);
     })
     // GET a user his/her info by email 
-    app.get('/users/:email',verifyToken, async (req, res) => {
+    app.get('/users/:email', verifyToken, async (req, res) => {
       const email = req.params.email;
       const query = { email }
       const result = await usersCollection.find(query).toArray();
@@ -126,7 +126,7 @@ async function run() {
     })
 
 
-                    // **************TEACHER & CLASS related api***************
+    // **************TEACHER & CLASS related api***************
 
     // POST a teacher request by user
     app.post('/teacher-requests', verifyToken, async (req, res) => {
@@ -135,7 +135,7 @@ async function run() {
       res.send(result);
     })
     // PATCH a teacher request again by user
-    app.patch('/teacher-requests/:email',verifyToken, async(req,res)=>{
+    app.patch('/teacher-requests/:email', verifyToken, async (req, res) => {
       const email = req.decoded.email;
       if (!email) {
         return res.status(400).send({ error: "Email is required" });
@@ -167,6 +167,35 @@ async function run() {
       const result = await classesCollection.find(query).toArray();
       res.send(result);
     })
+    // (Teacher) PATCH update a class by its teacher
+    app.patch('/update-class/:id', verifyToken, verifyTeacher, async (req, res) => {
+      const id = req.params.id;  
+      const { title, price, image, description } = req.body; 
+      if (!title || !price || !image || !description) {
+        return res.status(400).send({ error: "All fields (title, price, image, description) are required" });
+      }
+      const filter = { _id: new ObjectId(id) };
+      const updatedDoc = {
+        $set: {
+          title,     
+          price,       
+          image,       
+          description, 
+        },
+      };
+
+      try {
+        const result = await classesCollection.updateOne(filter, updatedDoc); 
+        if (result.matchedCount === 0) {
+          return res.status(404).send({ error: "Class not found" });
+        }
+        res.send(result);
+      } catch (error) {
+        console.error("Error updating class:", error); 
+        res.status(500).send({ error: "Failed to update class" });
+      }
+    });
+
     // (Admin) PATCH approve a teacher
     app.patch('/users/teacher-approve/:email', verifyToken, verifyAdmin, async (req, res) => {
       const email = req.params.email;
@@ -269,9 +298,9 @@ async function run() {
       res.send(result);
     })
     // GET a specific teacher data by his/her email
-    app.get('/teachers/:email', verifyToken, async (req, res) => {
+    app.get('/teachers/:email', async (req, res) => {
       const email = req.params.email;
-      const query ={email : email};
+      const query = { email: email };
       const result = await teachersCollection.findOne(query);
       res.send(result)
     })
