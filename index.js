@@ -134,7 +134,25 @@ async function run() {
       const result = await teachersCollection.insertOne(teacherInfo);
       res.send(result);
     })
-
+    // PATCH a teacher request again by user
+    app.patch('/teacher-requests/:email',verifyToken, async(req,res)=>{
+      const email = req.decoded.email;
+      if (!email) {
+        return res.status(400).send({ error: "Email is required" });
+      }
+      const filter = { email: email };
+      const updatedDoc = {
+        $set: {
+          status: "Pending",
+        },
+      };
+      try {
+        const result = await teachersCollection.updateOne(filter, updatedDoc);
+        res.send(result);
+      } catch (error) {
+        res.status(500).send({ error: "Failed to update teacher status" });
+      }
+    })
     // (Teacher) POST a class request by teacher
     app.post('/classes', verifyToken, verifyTeacher, async (req, res) => {
       const classInfo = req.body;
