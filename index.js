@@ -105,7 +105,7 @@ async function run() {
       res.send(result);
     })
     // GET a user his/her info by email 
-    app.get('/users/:email', verifyToken, async (req, res) => {
+    app.get('/users/:email',verifyToken, async (req, res) => {
       const email = req.params.email;
       const query = { email }
       const result = await usersCollection.find(query).toArray();
@@ -134,6 +134,7 @@ async function run() {
       const result = await teachersCollection.insertOne(teacherInfo);
       res.send(result);
     })
+
     // (Teacher) POST a class request by teacher
     app.post('/classes', verifyToken, verifyTeacher, async (req, res) => {
       const classInfo = req.body;
@@ -173,7 +174,6 @@ async function run() {
         }
         res.send({ result1, result2 });
       } catch (error) {
-        console.error(error);
         res.status(500).send({ error: "Failed to update user role" });
       }
     });
@@ -222,7 +222,6 @@ async function run() {
         const result = await classesCollection.updateOne(filter, updatedDoc);
         res.send(result);
       } catch (error) {
-        console.error(error);
         res.status(500).send({ error: "Failed to update class status" });
       }
     });
@@ -250,6 +249,13 @@ async function run() {
     app.get('/teachers', verifyToken, verifyAdmin, async (req, res) => {
       const result = await teachersCollection.find().toArray();
       res.send(result);
+    })
+    // GET a specific teacher data by his/her email
+    app.get('/teachers/:email', verifyToken, async (req, res) => {
+      const email = req.params.email;
+      const query ={email : email};
+      const result = await teachersCollection.findOne(query);
+      res.send(result)
     })
     // (Admin) GET all class requests from teachers
     app.get('/classes', verifyToken, verifyAdmin, async (req, res) => {
