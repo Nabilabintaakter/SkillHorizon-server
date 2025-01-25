@@ -195,6 +195,13 @@ async function run() {
         res.status(500).send({ error: "Failed to update class" });
       }
     });
+    // (Teacher) DELETE a class by its teacher
+    app.delete('/my-class/:id',verifyToken,verifyTeacher, async(req,res)=>{
+      const id= req.params.id;
+      const query = {_id : new ObjectId(id)}
+      const result = await classesCollection.deleteOne(query);
+      res.send(result)
+    })
 
     // (Admin) PATCH approve a teacher
     app.patch('/users/teacher-approve/:email', verifyToken, verifyAdmin, async (req, res) => {
