@@ -45,6 +45,7 @@ async function run() {
     const db = client.db('skillHorizonDB')
     const teachersCollection = db.collection('teachers')
     const classesCollection = db.collection('classes')
+    const assignmentsCollection = db.collection('assignments')
     const usersCollection = db.collection('users')
 
     // jwt related api
@@ -126,7 +127,7 @@ async function run() {
     })
 
 
-    // **************TEACHER & CLASS related api***************
+    // **************TEACHER , CLASS & ASSIGNMENTS related api***************
 
     // POST a teacher request by user
     app.post('/teacher-requests', verifyToken, async (req, res) => {
@@ -159,7 +160,12 @@ async function run() {
       const result = await classesCollection.insertOne(classInfo);
       res.send(result);
     })
-
+    // (Teacher) POST an assignment by teacher
+    app.post('/assignments', verifyToken, verifyTeacher, async (req, res) => {
+      const assignmentInfo = req.body;
+      const result = await assignmentsCollection.insertOne(assignmentInfo);
+      res.send(result);
+    })
     // (Teacher) GET all class requests added by a specific teacher
     app.get('/classes/:email', verifyToken, verifyTeacher, async (req, res) => {
       const email = req.params.email;
