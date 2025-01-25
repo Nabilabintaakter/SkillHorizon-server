@@ -4,6 +4,7 @@ const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const app = express();
 const port = process.env.PORT || 5000;
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY)
 
 // middleware
 app.use(cors());
@@ -167,18 +168,12 @@ async function run() {
       res.send(result);
     })
     // (Teacher) GET assignments of a class by specific teacher
-    app.get('/assignments', async (req, res) => {
+    app.get('/assignments', verifyToken, verifyTeacher, async (req, res) => {
       const { teacherEmail, classId } = req.query;
-      if (!teacherEmail || !classId) {
-        return res.status(400).json({ error: 'Teacher email and class ID are required' });
-      }
       const result = await assignmentsCollection.find({
         teacherEmail: teacherEmail,
         classId: classId
       }).toArray();
-      if (result.length === 0) {
-        return res.status(404).json({ message: 'No assignments found for this teacher in this class' });
-      }
       res.send(result);
     });
     // (Teacher) GET all class requests added by a specific teacher
@@ -359,7 +354,21 @@ async function run() {
     })
 
 
-
+    // -------------------PAYMENT INTENT--------------------
+    app.post('/create-payment-intent',async(req,res)=>{
+      const {price} = req.body;
+      const amount= parseInt(price *100);
+      const paymentIntent= await stripe.paymentIntents.create({
+        amount: amount,
+        currency: "usd",
+        payment_method_types: [
+          "card"
+        ]
+      });
+      res.send({
+        clientSecret: paymentIntent.client_secret
+      })
+    })
 
 
     // Send a ping to confirm a successful connection
