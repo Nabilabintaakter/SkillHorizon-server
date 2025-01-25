@@ -169,38 +169,45 @@ async function run() {
     })
     // (Teacher) PATCH update a class by its teacher
     app.patch('/update-class/:id', verifyToken, verifyTeacher, async (req, res) => {
-      const id = req.params.id;  
-      const { title, price, image, description } = req.body; 
+      const id = req.params.id;
+      const { title, price, image, description } = req.body;
       if (!title || !price || !image || !description) {
         return res.status(400).send({ error: "All fields (title, price, image, description) are required" });
       }
       const filter = { _id: new ObjectId(id) };
       const updatedDoc = {
         $set: {
-          title,     
-          price,       
-          image,       
-          description, 
+          title,
+          price,
+          image,
+          description,
         },
       };
 
       try {
-        const result = await classesCollection.updateOne(filter, updatedDoc); 
+        const result = await classesCollection.updateOne(filter, updatedDoc);
         if (result.matchedCount === 0) {
           return res.status(404).send({ error: "Class not found" });
         }
         res.send(result);
       } catch (error) {
-        console.error("Error updating class:", error); 
+        console.error("Error updating class:", error);
         res.status(500).send({ error: "Failed to update class" });
       }
     });
     // (Teacher) DELETE a class by its teacher
-    app.delete('/my-class/:id',verifyToken,verifyTeacher, async(req,res)=>{
-      const id= req.params.id;
-      const query = {_id : new ObjectId(id)}
+    app.delete('/my-class/:id', verifyToken, verifyTeacher, async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) }
       const result = await classesCollection.deleteOne(query);
       res.send(result)
+    })
+    // (Teacher) GET a class details by id
+    app.get('/my-class-assignment/:id', verifyToken,verifyTeacher, async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await classesCollection.findOne(query);
+      res.send(result);
     })
 
     // (Admin) PATCH approve a teacher
