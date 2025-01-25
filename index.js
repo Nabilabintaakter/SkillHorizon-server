@@ -166,6 +166,21 @@ async function run() {
       const result = await assignmentsCollection.insertOne(assignmentInfo);
       res.send(result);
     })
+    // (Teacher) GET assignments of a class by specific teacher
+    app.get('/assignments', async (req, res) => {
+      const { teacherEmail, classId } = req.query;
+      if (!teacherEmail || !classId) {
+        return res.status(400).json({ error: 'Teacher email and class ID are required' });
+      }
+      const result = await assignmentsCollection.find({
+        teacherEmail: teacherEmail,
+        classId: classId
+      }).toArray();
+      if (result.length === 0) {
+        return res.status(404).json({ message: 'No assignments found for this teacher in this class' });
+      }
+      res.send(result);
+    });
     // (Teacher) GET all class requests added by a specific teacher
     app.get('/classes/:email', verifyToken, verifyTeacher, async (req, res) => {
       const email = req.params.email;
@@ -209,7 +224,7 @@ async function run() {
       res.send(result)
     })
     // (Teacher) GET a class details by id
-    app.get('/my-class-assignment/:id', verifyToken,verifyTeacher, async (req, res) => {
+    app.get('/my-class-assignment/:id', verifyToken, verifyTeacher, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await classesCollection.findOne(query);
