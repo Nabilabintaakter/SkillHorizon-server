@@ -362,6 +362,7 @@ async function run() {
           enrolledClasses.map(async (payment) => {
             const classData = await classesCollection.findOne({ _id: new ObjectId(payment.classId) });
             return {
+              id: classData?._id,
               title: classData?.title,
               image: classData?.image,
               email: classData?.email
@@ -374,6 +375,13 @@ async function run() {
         res.status(500).send({ message: 'Internal server error.' });
       }
     });
+    // GET all assignments of a class enrolled by a student
+    app.get('/my-enroll-class/assignment/:id', async (req, res) => {
+      const classId = req.params.id;
+      const query = { classId }
+      const result = await assignmentsCollection.find(query).toArray();
+      res.send(result)
+    })
 
     // -------------------PAYMENT INTENT--------------------
     // create payment intent
@@ -394,9 +402,20 @@ async function run() {
     // POST payment info by student
     app.post('/payments', verifyToken, async (req, res) => {
       const paymentInfo = req.body;
-      const result = await paymentsCollection.insertOne(paymentInfo);
-      res.send(result);
-    })
+      const classId = paymentInfo.classId; 
+      try {
+        const paymentResult = await paymentsCollection.insertOne(paymentInfo);
+        const classUpdateResult = await classesCollection.updateOne(
+          { _id: new ObjectId(classId) }, 
+          { $inc: { totalEnrollment: 1 } } 
+        );
+        res.send(paymentResult);
+      } catch (error) {
+        console.error('Error processing payment:', error);
+        res.status(500).send({ error: 'Failed to process payment and update class enrollment.' });
+      }
+    });
+
 
 
     // Send a ping to confirm a successful connection
