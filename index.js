@@ -47,6 +47,7 @@ async function run() {
     const teachersCollection = db.collection('teachers')
     const classesCollection = db.collection('classes')
     const assignmentsCollection = db.collection('assignments')
+    const paymentsCollection = db.collection('payments')
     const usersCollection = db.collection('users')
 
     // jwt related api
@@ -345,7 +346,7 @@ async function run() {
       const result = await classesCollection.find(query).toArray();
       res.send(result);
     })
-    //  GET a class details by id
+    //  GET a class details by id for a student
     app.get('/class/:id', verifyToken, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
@@ -355,6 +356,7 @@ async function run() {
 
 
     // -------------------PAYMENT INTENT--------------------
+    // create payment intent
     app.post('/create-payment-intent',async(req,res)=>{
       const {price} = req.body;
       const amount= parseInt(price *100);
@@ -368,6 +370,12 @@ async function run() {
       res.send({
         clientSecret: paymentIntent.client_secret
       })
+    })
+    // POST payment info by student
+    app.post('/payments', verifyToken, async (req, res) => {
+      const paymentInfo = req.body;
+      const result = await paymentsCollection.insertOne(paymentInfo);
+      res.send(result);
     })
 
 
