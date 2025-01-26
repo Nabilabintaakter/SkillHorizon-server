@@ -47,6 +47,7 @@ async function run() {
     const teachersCollection = db.collection('teachers')
     const classesCollection = db.collection('classes')
     const assignmentsCollection = db.collection('assignments')
+    const submissionsCollection = db.collection('submissions')
     const paymentsCollection = db.collection('payments')
     const usersCollection = db.collection('users')
 
@@ -382,6 +383,12 @@ async function run() {
       const result = await assignmentsCollection.find(query).toArray();
       res.send(result)
     })
+    // POST submit a assignment by a student
+    app.post('/assignments-submission', async(req,res)=>{
+      const submissionInfo = req.body;
+      const result = await submissionsCollection.insertOne(submissionInfo);
+      res.send(result)
+    })
 
     // -------------------PAYMENT INTENT--------------------
     // create payment intent
@@ -415,9 +422,6 @@ async function run() {
         res.status(500).send({ error: 'Failed to process payment and update class enrollment.' });
       }
     });
-
-
-
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
