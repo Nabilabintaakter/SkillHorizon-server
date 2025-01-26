@@ -177,7 +177,7 @@ async function run() {
       }).toArray();
       res.send(result);
     });
-    // (Teacher) GET all class requests added by a specific teacher
+    // (Teacher) GET all classes added by a specific teacher
     app.get('/classes/:email', verifyToken, verifyTeacher, async (req, res) => {
       const email = req.params.email;
       const query = { email }
@@ -353,14 +353,34 @@ async function run() {
       const result = await classesCollection.findOne(query);
       res.send(result);
     })
-
+    // GET all enrolled classes of a specific student
+    app.get('/my-enroll-class/:email', verifyToken, async (req, res) => {
+      try {
+        const studentEmail = req.params.email;
+        const enrolledClasses = await paymentsCollection.find({ studentEmail }).toArray();
+        const classDetails = await Promise.all(
+          enrolledClasses.map(async (payment) => {
+            const classData = await classesCollection.findOne({ _id: new ObjectId(payment.classId) });
+            return {
+              title: classData?.title,
+              image: classData?.image,
+              email: classData?.email
+            };
+          })
+        );
+        res.send(classDetails);
+      } catch (error) {
+        console.error('Error fetching enrolled classes:', error);
+        res.status(500).send({ message: 'Internal server error.' });
+      }
+    });
 
     // -------------------PAYMENT INTENT--------------------
     // create payment intent
-    app.post('/create-payment-intent',async(req,res)=>{
-      const {price} = req.body;
-      const amount= parseInt(price *100);
-      const paymentIntent= await stripe.paymentIntents.create({
+    app.post('/create-payment-intent', async (req, res) => {
+      const { price } = req.body;
+      const amount = parseInt(price * 100);
+      const paymentIntent = await stripe.paymentIntents.create({
         amount: amount,
         currency: "usd",
         payment_method_types: [
