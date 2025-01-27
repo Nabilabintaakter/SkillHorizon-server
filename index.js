@@ -377,18 +377,27 @@ async function run() {
       }
     });
     // GET all assignments of a class enrolled by a student
-    app.get('/my-enroll-class/assignment/:id', async (req, res) => {
+    app.get('/my-enroll-class/assignment/:id',verifyToken, async (req, res) => {
       const classId = req.params.id;
       const query = { classId }
       const result = await assignmentsCollection.find(query).toArray();
       res.send(result)
     })
     // POST submit a assignment by a student
-    app.post('/assignments-submission', async(req,res)=>{
+    app.post('/assignments-submission',verifyToken, async(req,res)=>{
       const submissionInfo = req.body;
       const result = await submissionsCollection.insertOne(submissionInfo);
       res.send(result)
     })
+    // (Teacher) GET submission info of a class
+    app.get('/my-class-assignment/submissions/:id',verifyToken,verifyTeacher, async(req,res)=>{
+      const classId = req.params.id;
+      const query = {classId : classId}
+      const result = await submissionsCollection.find(query).toArray();
+      res.send(result);
+    })
+
+
 
     // -------------------PAYMENT INTENT--------------------
     // create payment intent
