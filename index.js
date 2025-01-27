@@ -103,12 +103,6 @@ async function run() {
       const result = await usersCollection.findOne({ email })
       res.send({ role: result?.role })
     })
-
-    // (Admin) GET all users info
-    app.get('/users', verifyToken, verifyAdmin, async (req, res) => {
-      const result = await usersCollection.find().toArray();
-      res.send(result);
-    })
     // GET a user his/her info by email 
     app.get('/users/:email', verifyToken, async (req, res) => {
       const email = req.params.email;
@@ -116,7 +110,11 @@ async function run() {
       const result = await usersCollection.find(query).toArray();
       res.send(result);
     })
-
+    // GET total numbers of users of the website
+    app.get('/users', async (req, res) => {
+      const users = await usersCollection.find().toArray();
+      res.send(users)
+    })
     // (Admin) PATCH make a user admin
     app.patch('/users/admin/:id', verifyToken, verifyAdmin, async (req, res) => {
       const id = req.params.id;
@@ -434,12 +432,10 @@ async function run() {
       res.send(result);
     })
     // GET all reviews of teachers given by students
-    app.get('/reviews', async(req,res)=>{
+    app.get('/reviews', async (req, res) => {
       const result = await reviewsCollection.find().toArray();
       res.send(result);
     })
-
-
     // (Teacher) GET submission info of a class
     app.get('/my-class-assignment/submissions/:id', verifyToken, async (req, res) => {
       const classId = req.params.id;
@@ -482,6 +478,15 @@ async function run() {
         res.status(500).send({ error: 'Failed to process payment and update class enrollment.' });
       }
     });
+    // GET total number of enrollments 
+    app.get('/enrollments', async (req, res) => {
+      const result = await paymentsCollection.find().toArray();
+      console.log(result.length);
+      res.send(result)
+    })
+
+
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
