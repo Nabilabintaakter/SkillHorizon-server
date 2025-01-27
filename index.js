@@ -433,6 +433,11 @@ async function run() {
       const result = await reviewsCollection.insertOne(evaluationData);
       res.send(result);
     })
+    // GET all reviews of teachers given by students
+    app.get('/reviews', async(req,res)=>{
+      const result = await reviewsCollection.find().toArray();
+      res.send(result);
+    })
 
 
     // (Teacher) GET submission info of a class
