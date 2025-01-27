@@ -48,6 +48,7 @@ async function run() {
     const classesCollection = db.collection('classes')
     const assignmentsCollection = db.collection('assignments')
     const submissionsCollection = db.collection('submissions')
+    const reviewsCollection = db.collection('reviews')
     const paymentsCollection = db.collection('payments')
     const usersCollection = db.collection('users')
 
@@ -164,19 +165,31 @@ async function run() {
       res.send(result);
     })
     // (Teacher) POST an assignment by teacher
-    app.post('/assignments', verifyToken, verifyTeacher, async (req, res) => {
+    app.post('/assignments', verifyToken, async (req, res) => {
       const assignmentInfo = req.body;
       const result = await assignmentsCollection.insertOne(assignmentInfo);
       res.send(result);
     })
     // (Teacher) GET assignments of a class by specific teacher
-    app.get('/assignments', verifyToken, verifyTeacher, async (req, res) => {
-      const { teacherEmail, classId } = req.query;
-      const result = await assignmentsCollection.find({
-        teacherEmail: teacherEmail,
-        classId: classId
-      }).toArray();
-      res.send(result);
+    app.get('/assignments', verifyToken, async (req, res) => {
+      try {
+        const { teacherEmail, classId } = req.query;
+
+        // Validate query parameters
+        if (!teacherEmail || !classId) {
+          return res.status(400).send({ message: 'Teacher Email and Class ID are required' });
+        }
+
+        const result = await assignmentsCollection.find({
+          teacherEmail: teacherEmail,
+          classId: classId
+        }).toArray();
+
+        res.send(result);
+      } catch (err) {
+        console.error(err);
+        res.status(500).send({ message: 'An error occurred while fetching assignments' });
+      }
     });
     // (Teacher) GET all classes added by a specific teacher
     app.get('/classes/:email', verifyToken, verifyTeacher, async (req, res) => {
@@ -221,7 +234,7 @@ async function run() {
       res.send(result)
     })
     // (Teacher) GET a class details by id
-    app.get('/my-class-assignment/:id', verifyToken, verifyTeacher, async (req, res) => {
+    app.get('/my-class-assignment/:id', verifyToken, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await classesCollection.findOne(query);
@@ -377,22 +390,55 @@ async function run() {
       }
     });
     // GET all assignments of a class enrolled by a student
-    app.get('/my-enroll-class/assignment/:id',verifyToken, async (req, res) => {
+    app.get('/my-enroll-class/assignment/:id', verifyToken, async (req, res) => {
       const classId = req.params.id;
       const query = { classId }
       const result = await assignmentsCollection.find(query).toArray();
       res.send(result)
     })
     // POST submit a assignment by a student
-    app.post('/assignments-submission',verifyToken, async(req,res)=>{
+    app.post('/assignments-submission', verifyToken, async (req, res) => {
       const submissionInfo = req.body;
       const result = await submissionsCollection.insertOne(submissionInfo);
       res.send(result)
     })
+    // GET an assignment submission info of a student
+    app.get('/my-submission', verifyToken, async (req, res) => {
+      try {
+        const studentEmail = req.query.email;
+        const assignmentTitle = req.query.title;
+
+        if (!studentEmail || !assignmentTitle) {
+          return res.status(400).json({ error: "Email and title are required" });
+        }
+
+        const submission = await submissionsCollection.findOne({
+          studentEmail: studentEmail,
+          assignmentTitle: assignmentTitle,
+        });
+
+        if (submission) {
+          return res.send(submission);
+        } else {
+          return res.send({});
+        }
+      } catch (error) {
+        console.error("Error fetching submission:", error);
+        return res.status(500).json({ error: "Failed to fetch submission" });
+      }
+    });
+    // POST a review by student
+    app.post('/reviews', verifyToken, async (req, res) => {
+      const evaluationData = req.body;
+      const result = await reviewsCollection.insertOne(evaluationData);
+      res.send(result);
+    })
+
+
     // (Teacher) GET submission info of a class
-    app.get('/my-class-assignment/submissions/:id',verifyToken,verifyTeacher, async(req,res)=>{
+    app.get('/my-class-assignment/submissions/:id', verifyToken, async (req, res) => {
       const classId = req.params.id;
-      const query = {classId : classId}
+      const query = { classId: classId }
       const result = await submissionsCollection.find(query).toArray();
       res.send(result);
     })
@@ -418,12 +464,12 @@ async function run() {
     // POST payment info by student
     app.post('/payments', verifyToken, async (req, res) => {
       const paymentInfo = req.body;
-      const classId = paymentInfo.classId; 
+      const classId = paymentInfo.classId;
       try {
         const paymentResult = await paymentsCollection.insertOne(paymentInfo);
         const classUpdateResult = await classesCollection.updateOne(
-          { _id: new ObjectId(classId) }, 
-          { $inc: { totalEnrollment: 1 } } 
+          { _id: new ObjectId(classId) },
+          { $inc: { totalEnrollment: 1 } }
         );
         res.send(paymentResult);
       } catch (error) {
