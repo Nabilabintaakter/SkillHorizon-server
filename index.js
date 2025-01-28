@@ -443,6 +443,22 @@ async function run() {
       const result = await submissionsCollection.find(query).toArray();
       res.send(result);
     })
+    // GET most enrolled classes (limit 8)
+    app.get('/featuredClasses', async (req, res) => {
+      try {
+        const classes = await classesCollection
+          .find()
+          .sort({ totalEnrollment: -1 }) 
+          .limit(8)                     
+          .toArray();
+
+        res.send(classes); 
+      } catch (error) {
+        console.error("Error fetching featured classes:", error);
+        res.status(500).send({ message: "Failed to fetch featured classes." });
+      }
+    });
+
 
 
 
@@ -488,7 +504,7 @@ async function run() {
 
 
     // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
+    // await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
     // Ensures that the client will close when you finish/error
