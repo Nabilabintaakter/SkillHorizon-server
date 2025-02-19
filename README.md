@@ -13,7 +13,7 @@ This repository contains the **server-side** implementation of the SkillHorizon 
 
 ---
 
-## **Features**
+## ✨ **Key Features** 
 ✔ **RESTful API** – Provides secure and efficient endpoints for data retrieval and manipulation.  
 ✔ **JWT Authentication** – Ensures secure communication and protects private routes.  
 ✔ **Role-Based Access Control** – Differentiates access for admins, teachers, and students.  
@@ -26,7 +26,7 @@ This repository contains the **server-side** implementation of the SkillHorizon 
 
 ---
 
-## **Technologies Used**
+## 🚀 **Technologies Used**
 - **Node.js** – Backend runtime environment.
 - **Express.js** – Web framework for building REST APIs.
 - **MongoDB** – NoSQL database for storing application data.
@@ -45,28 +45,34 @@ Make sure you have the following installed on your system:
 ✅ **Node.js** (v16 or above)  
 ✅ **MongoDB** (Local or Atlas)  
 
-### **Steps to Install and Run the Project**
+## 🖥️ **Backend Setup**
 
-1. **Clone the repository:**
-    ```sh
-   git clone https://github.com/Nabilabintaakter/SkillHorizon-server.git
-   cd SkillHorizon-server
-2. **Install dependencies:**
-    ```sh
-   npm install
-3. **Create a .env file in the root directory and add the following environment variables:**
-    ```sh
-   touch .env
-   nano .env 
-  
-**Then, add the following lines inside .env:**
-```sh
-   PORT=5000
-   MONGO_URI=your_mongodb_connection_string
-   JWT_SECRET=your_jwt_secret_key
-   STRIPE_SECRET_KEY=your_stripe_secret_key
-   ```
-   
-4. **Start the development server:**
-     ```sh
+1. Clone the repository:
+    ```bash
+    git clone https://github.com/Nabilabintaakter/SkillHorizon-server.git
+    cd SkillHorizon-server
+    ```
+
+2. Install dependencies:
+    ```bash
+    npm install
+    ```
+
+3. Set up your environment variables (Firebase and MongoDB credentials):
+    ```bash
+    touch .env
+    nano .env
+    ```
+    Add the following inside `.env`:
+    ```bash
+    MONGO_URI=your_mongodb_connection_string
+    JWT_SECRET=your_jwt_secret_key
+    FIREBASE_SECRET=your_firebase_secret
+    ```
+
+4. Start the development server:
+    ```bash
     npm run dev
+    ```
+
+5. The backend will be accessible at `http://localhost:5000`.

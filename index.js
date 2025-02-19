@@ -354,12 +354,17 @@ async function run() {
     })
     //  GET all class approved by admin (for all users either logged in or not)
     app.get('/all-classes', async (req, res) => {
+      const sort = req.query.sort;
+      let options = {};
+      if(sort){
+        options = {price: sort === 'asc' ? 1 : -1 }
+      }
       const query = { status: 'Accepted' }
-      const result = await classesCollection.find(query).toArray();
+      const result = await classesCollection.find(query).sort(options).toArray();
       res.send(result);
     })
     //  GET a class details by id for a student
-    app.get('/class/:id', verifyToken, async (req, res) => {
+    app.get('/class/:id', async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await classesCollection.findOne(query);
